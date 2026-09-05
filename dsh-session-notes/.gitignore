@@ -1,0 +1,3 @@
+# 忽略构建中间产物（发布 zip / 仓库里保留 lib 成品可按需调整）
+build/client.raw.js
+*.zip

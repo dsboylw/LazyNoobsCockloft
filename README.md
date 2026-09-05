@@ -2,9 +2,9 @@
 
 一个菜鸡懒狗懒得打扫的堆着无聊杂物的破阁楼（DSH Desktop 插件合集）。
 
-<em>AI <span style="color:red"><strong>解放了生产力</strong></span>，让我这样的菜狗都可以懒到家，甚至这段 readme 的编辑都是让 AI 改的。。。。</em>
+AI <span style="color:red"><strong><em><u>解放了生产力</u></em></strong></span>，让我这样的菜狗都可以懒到家，甚至这段 readme 的编辑都是让 AI 改的。。。。
 
-<em>人，为什么不<span style="color:red"><strong>解放想象力</strong></span>，让自己变得更懒呢。。。。 欧耶~~</em>
+人，为什么不<span style="color:red"><strong><em><u>解放想象力</u></em></strong></span>，让自己变得更懒呢。。。。 欧耶~~
 
 ## 插件列表
 

@@ -4,6 +4,8 @@
 
 [中文](README.md) | [English](README.en.md)
 
+> ⚠️ **Built and tested on DSH Desktop 0.7.1**. A past DSH upgrade broke plugins once before (internal client conventions like webServer / slots / ModuleLoader changed). If this plugin stops working after you upgrade DSH, roll back or check the repo for an updated build.
+
 ## Why this plugin exists
 
 While using DSH Desktop I kept hitting the same annoyance: in one session I'd reuse the same prompt over and over to pull data, and every time I had to scroll back through the chat history, copy the prompt, and paste it back in. Right-clicking the session offered no note field, so I decided to just write one myself.

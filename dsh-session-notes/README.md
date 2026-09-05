@@ -4,7 +4,7 @@
 
 [中文](README.md) | [English](README.en.md)
 
-> ⚠️ **适配 DSH Desktop 0.7.1**（开发与测试均在 0.7.1 上完成）。DSH 升级曾弄挂过插件（客户端内部结构变化，如 webServer / slots / ModuleLoader 约定），升级 DSH 后如果本插件失效，先回退 DSH 版本或到仓库看有没有适配更新。
+> ⚠️ **适配 DSH Desktop 0.7.1**（开发与测试均在 0.7.1 上完成）。
 
 ## 为什么写这个插件
 

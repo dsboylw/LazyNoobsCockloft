@@ -4,7 +4,7 @@
 
 [中文](README.md) | [English](README.en.md)
 
-> ⚠️ **Built and tested on DSH Desktop 0.7.1**. A past DSH upgrade broke plugins once before (internal client conventions like webServer / slots / ModuleLoader changed). If this plugin stops working after you upgrade DSH, roll back or check the repo for an updated build.
+> ⚠️ **Built and tested on DSH Desktop 0.7.1**.
 
 ## Why this plugin exists
 

@@ -1,7 +1,7 @@
 {
   "tag_name": "v0.1.1",
   "name": "dsh-session-notes 0.1.1",
-  "body": "DSH 会话备注插件（DSH Desktop / Web 通用）。\n\n> ⚠️ 适配 DSH Desktop 0.7.1（开发与测试版本）。DSH 升级可能弄挂插件，升级后失效请回退 DSH 或到仓库看适配更新。\n\nv0.1.1 新增：\n- 长文本不再撑爆界面：底部备注条（工作区/标题/备注）、全部备注总览（工作区/标题/备注预览）全部按长度截断，超出显示 …，悬停看全文\n- 会话归属工作区：总览行和底部条显示工作区徽标（5 字截断，悬停看全名），无归属的自动省略\n- 复制按钮始终复制完整内容，不受截断影响\n\n基础功能（v0.1.0）：\n- 📝 会话头部备注按钮（有备注时带绿点），弹层编辑 + 防抖自动保存\n- 5 色标记点、一键复制\n- 全部备注总览：列出所有带备注的会话，点击直达\n- 底部常驻备注条（可开关）\n\n安装（DSH Desktop）：\n1. 解压本包\n2. 运行 install.ps1（自动备份 cordis.patch.yml）\n3. 重启 DSH Desktop\n\n卸载：运行 uninstall.ps1\n源码：https://github.com/dsboylw/LazyNoobsCockloft/tree/main/dsh-session-notes",
+  "body": "DSH 会话备注插件（DSH Desktop / Web 通用）。\n\n> ⚠️ 适配 DSH Desktop 0.7.1（开发与测试版本）。\n\nv0.1.1 新增：\n- 长文本不再撑爆界面：底部备注条（工作区/标题/备注）、全部备注总览（工作区/标题/备注预览）全部按长度截断，超出显示 …，悬停看全文\n- 会话归属工作区：总览行和底部条显示工作区徽标（5 字截断，悬停看全名），无归属的自动省略\n- 复制按钮始终复制完整内容，不受截断影响\n\n基础功能（v0.1.0）：\n- 📝 会话头部备注按钮（有备注时带绿点），弹层编辑 + 防抖自动保存\n- 5 色标记点、一键复制\n- 全部备注总览：列出所有带备注的会话，点击直达\n- 底部常驻备注条（可开关）\n\n安装（DSH Desktop）：\n1. 解压本包\n2. 运行 install.ps1（自动备份 cordis.patch.yml）\n3. 重启 DSH Desktop\n\n卸载：运行 uninstall.ps1\n源码：https://github.com/dsboylw/LazyNoobsCockloft/tree/main/dsh-session-notes",
   "draft": false,
   "prerelease": false
 }

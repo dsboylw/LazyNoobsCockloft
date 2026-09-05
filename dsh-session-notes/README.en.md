@@ -4,6 +4,16 @@
 
 [中文](README.md) | [English](README.en.md)
 
+## Why this plugin exists
+
+While using DSH Desktop I kept hitting the same annoyance: in one session I'd reuse the same prompt over and over to pull data, and every time I had to scroll back through the chat history, copy the prompt, and paste it back in. Right-clicking the session offered no note field, so I decided to just write one myself.
+
+I had previously installed fun-ticker, found it clunky and uninstalled it — it wasn't built for the desktop app in the first place, and the uninstall didn't clean up fully. So I ended up borrowing parts of its structure to build this notes plugin instead.
+
+Sessions with notes show up in the overview: click a note to jump straight to that session, and one-click copy whatever you wrote — e.g. the prompt itself.
+
+Lazy~~~~ that's just who I am ~ Noob and lazy, what can I do…
+
 ## Features
 
 - **📝 Header button** (next to the conversation title): opens the edit popover; shows a green dot when the current session has a note

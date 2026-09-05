@@ -12,6 +12,13 @@ import { NOTE_COLORS, SAVE_DEBOUNCE_MS } from './contract.ts'
 import { copyText } from './clipboard.ts'
 import { ensureStyles } from './styles.ts'
 
+/** Overview row: characters shown for the session title before an ellipsis. */
+const ROW_TITLE_CHARS = 8
+/** Overview row: characters shown for the note preview before an ellipsis. */
+const ROW_PREVIEW_CHARS = 15
+/** Overview row: characters shown for the workspace name before an ellipsis. */
+const ROW_WORKSPACE_CHARS = 5
+
 /** Popover anchor (viewport coords of the trigger button). */
 export interface PopoverAnchor {
   left: number
@@ -23,6 +30,8 @@ export interface PopoverAnchor {
 export interface SessionRow {
   id: string
   title: string
+  /** Owning workspace display name, when the workspaces service reports one. */
+  workspace?: string
 }
 
 /** Props shared by both surfaces. */
@@ -229,19 +238,25 @@ export function NotesPopover(props: NotesUiProps): JSX.Element | null {
         {rowsWithNotes.length === 0 && <div style={{ opacity: 0.6, fontSize: 13 }}>{t('all.empty')}</div>}
         {rowsWithNotes.map((row) => {
           const note = state.notes[row.id]
+          const title = row.title.length > ROW_TITLE_CHARS ? `${row.title.slice(0, ROW_TITLE_CHARS)}…` : row.title
+          const preview = note.text.length > ROW_PREVIEW_CHARS ? `${note.text.slice(0, ROW_PREVIEW_CHARS)}…` : note.text
+          const workspace = row.workspace === undefined ? undefined : (row.workspace.length > ROW_WORKSPACE_CHARS ? `${row.workspace.slice(0, ROW_WORKSPACE_CHARS)}…` : row.workspace)
+          const hover = row.workspace === undefined ? `${row.title} — ${note.text}` : `${row.workspace} / ${row.title} — ${note.text}`
           return (
             <div
               key={row.id}
               role="button"
               tabIndex={0}
               className="snotes-item"
+              title={hover}
               onClick={() => { closePopover(); openSession(row.id) }}
               onKeyDown={(e) => { if (e.key === 'Enter') { closePopover(); openSession(row.id) } }}
             >
               <span className={`snotes-flag ${note.color}`} />
               <span className="snotes-item-text">
-                <span className="snotes-item-title">{row.title}</span>
-                {note.text === '' ? t('edit.empty') : note.text}
+                {workspace !== undefined && <span className="snotes-item-workspace">{workspace}</span>}
+                <span className="snotes-item-title">{title}</span>
+                {note.text === '' ? t('edit.empty') : preview}
               </span>
               <CopyButton
                 text={note.text}

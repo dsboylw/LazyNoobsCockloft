@@ -175,7 +175,7 @@ assert.strictEqual(typeof loaded.factory, 'function')
 
 const clientModule = loaded.factory(requireShim)
 assert.strictEqual(typeof clientModule.apply, 'function', 'client apply export')
-assert.deepStrictEqual(clientModule.inject, ['slots', 'locale', 'sessions'])
+assert.deepStrictEqual(clientModule.inject, ['slots', 'locale', 'sessions', 'workspaces'])
 
 // drive client apply with stub services
 const registrations = []
@@ -189,6 +189,12 @@ const sessionsService = {
   },
   open: (id) => { openCalls.push(id) },
 }
+const workspacesService = {
+  list: {
+    getSnapshot: () => ({ items: [{ workspaceId: 'ws1', title: '大项目工作区', sessionIds: ['a'] }] }),
+    subscribe: (fn) => { effects.push(fn); return () => {} },
+  },
+}
 const slots = {
   inject: (slotName, registerFactory) => { registrations.push({ slotName, registerFactory }) },
   register: (def, component) => {
@@ -198,7 +204,7 @@ const slots = {
 }
 const locale = { register: (ns, dict) => { localeNS.push(ns); assert.ok(dict.zh && dict.en) }, bind: (ns) => (key) => key }
 const clientCtx = {
-  slots, locale, sessions: sessionsService,
+  slots, locale, sessions: sessionsService, workspaces: workspacesService,
   effect: (fn, label) => { effects.push(fn()) },
 }
 clientModule.apply(clientCtx)
@@ -217,6 +223,8 @@ for (const r of registrations) {
   assert.strictEqual(face.sessionId, 'sess-live', 'inject face carries binding key')
   assert.ok(Array.isArray(face.sessionRows))
   assert.strictEqual(face.sessionRows.length, 2, 'projected session rows')
+  assert.strictEqual(face.sessionRows.find((r) => r.id === 'a').workspace, '大项目工作区', 'workspace projected onto row')
+  assert.strictEqual(face.sessionRows.find((r) => r.id === 'b').workspace, undefined, 'stray session has no workspace')
 }
 console.log('client bundle: OK')
 console.log('ALL SMOKE TESTS PASSED')

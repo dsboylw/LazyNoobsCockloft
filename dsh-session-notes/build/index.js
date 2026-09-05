@@ -1,4 +1,4 @@
-// plugin-src/dsh-session-notes/src/index.js
+// src/index.js
 var NOTES_NAMESPACE = "dsh-session-notes";
 var NOTES_API_PATH = "/plugins/dsh-session-notes/api";
 var MAX_NOTES = 2e3;

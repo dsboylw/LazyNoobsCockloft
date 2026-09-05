@@ -1,0 +1,7 @@
+{
+  "tag_name": "v0.1.0",
+  "name": "dsh-session-notes 0.1.0",
+  "body": "DSH 会话备注插件（DSH Desktop / Web 通用）。\n\n功能：\n- 📝 会话头部备注按钮（有备注时带绿点），弹层编辑 + 防抖自动保存\n- 一键复制备注、5 色标记点\n- 全部备注总览：列出所有带备注的会话，点击直达\n- 底部常驻备注条（可开关），输入框上方显示当前会话备注\n- 数据存宿主 settings，重启不丢；清空 = 删除\n\n安装（DSH Desktop）：\n1. 解压本包\n2. 运行 install.ps1（自动备份 cordis.patch.yml）\n3. 重启 DSH Desktop\n\n卸载：运行 uninstall.ps1\n源码：https://github.com/dsboylw/LazyNoobsRepository/tree/main/dsh-session-notes",
+  "draft": false,
+  "prerelease": false
+}

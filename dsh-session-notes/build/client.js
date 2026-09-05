@@ -20,7 +20,7 @@ var __copyProps = (to, from, except, desc) => {
 };
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 
-// plugin-src/dsh-session-notes/src/client/index.tsx
+// src/client/index.tsx
 var index_exports = {};
 __export(index_exports, {
   NotesBar: () => NotesBar,
@@ -30,7 +30,7 @@ __export(index_exports, {
 });
 module.exports = __toCommonJS(index_exports);
 
-// plugin-src/dsh-session-notes/src/client/store.ts
+// src/client/store.ts
 var import_react = require("react");
 var Store = class {
   /** @param {S} initial */
@@ -88,12 +88,12 @@ function bindSelector(store) {
   };
 }
 
-// plugin-src/dsh-session-notes/src/client/contract.ts
+// src/client/contract.ts
 var API_BASE = "/plugins/dsh-session-notes/api";
 var NOTE_COLORS = ["default", "amber", "rose", "sky", "lime"];
 var SAVE_DEBOUNCE_MS = 400;
 
-// plugin-src/dsh-session-notes/src/client/api.ts
+// src/client/api.ts
 async function request(path, init) {
   const response = await fetch(`${API_BASE}${path}`, init);
   if (!response.ok) throw new Error(`session-notes api ${String(response.status)}`);
@@ -120,7 +120,7 @@ function putBarEnabled(barEnabled) {
   });
 }
 
-// plugin-src/dsh-session-notes/src/client/clipboard.ts
+// src/client/clipboard.ts
 async function copyText(text) {
   if (text === "") return false;
   try {
@@ -146,7 +146,7 @@ async function copyText(text) {
   }
 }
 
-// plugin-src/dsh-session-notes/src/client/styles.ts
+// src/client/styles.ts
 var css = `
 .snotes-pop {
   position: fixed; z-index: 1000; min-width: 380px; max-width: 520px;
@@ -196,6 +196,12 @@ var css = `
 .snotes-item:hover { background: var(--dsw-alias-fill-hover, rgba(255,255,255,.06)); }
 .snotes-item .snotes-item-text { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .snotes-item .snotes-item-title { font-weight: 600; margin-right: 6px; }
+.snotes-item-workspace {
+  display: inline-block; max-width: 7em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  vertical-align: middle; margin-right: 6px; padding: 1px 6px; border-radius: 6px;
+  font-size: 11px; opacity: 0.75;
+  background: var(--dsw-specific-fill-tertiary, rgba(128,128,128,0.18));
+}
 .snotes-flag { width: 8px; height: 8px; border-radius: 50%; flex: none; }
 .snotes-flag.default { background: #8a8f98; }
 .snotes-flag.amber { background: #d29922; }
@@ -208,6 +214,11 @@ var css = `
   border-top: 1px solid var(--dsw-alias-line-primary, #333);
   background: var(--dsw-specific-sidebar-fill, transparent);
   color: var(--dsw-alias-label-secondary, #aaa);
+}
+.snotes-bar .snotes-bar-workspace {
+  flex: none; max-width: 7em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  padding: 1px 6px; border-radius: 6px; font-size: 11px; opacity: 0.85;
+  background: var(--dsw-specific-fill-tertiary, rgba(128,128,128,0.18));
 }
 .snotes-bar .snotes-bar-text {
   flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
@@ -231,7 +242,7 @@ function ensureStyles() {
   document.head.appendChild(tag);
 }
 
-// plugin-src/dsh-session-notes/src/client/locales.ts
+// src/client/locales.ts
 var NS = "session-notes";
 var zh = {
   "header.open": "\u{1F4DD} \u5907\u6CE8",
@@ -273,9 +284,12 @@ var en = {
 };
 var dictionaries = { zh, en };
 
-// plugin-src/dsh-session-notes/src/client/ui.tsx
+// src/client/ui.tsx
 var import_react2 = require("react");
 var import_jsx_runtime = require("react/jsx-runtime");
+var ROW_TITLE_CHARS = 8;
+var ROW_PREVIEW_CHARS = 15;
+var ROW_WORKSPACE_CHARS = 5;
 function useFlash(ms = 1500) {
   const [on, setOn] = (0, import_react2.useState)(false);
   const timer = (0, import_react2.useRef)(void 0);
@@ -439,12 +453,17 @@ function NotesPopover(props) {
       rowsWithNotes.length === 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: { opacity: 0.6, fontSize: 13 }, children: t("all.empty") }),
       rowsWithNotes.map((row) => {
         const note = state.notes[row.id];
+        const title = row.title.length > ROW_TITLE_CHARS ? `${row.title.slice(0, ROW_TITLE_CHARS)}\u2026` : row.title;
+        const preview = note.text.length > ROW_PREVIEW_CHARS ? `${note.text.slice(0, ROW_PREVIEW_CHARS)}\u2026` : note.text;
+        const workspace = row.workspace === void 0 ? void 0 : row.workspace.length > ROW_WORKSPACE_CHARS ? `${row.workspace.slice(0, ROW_WORKSPACE_CHARS)}\u2026` : row.workspace;
+        const hover = row.workspace === void 0 ? `${row.title} \u2014 ${note.text}` : `${row.workspace} / ${row.title} \u2014 ${note.text}`;
         return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(
           "div",
           {
             role: "button",
             tabIndex: 0,
             className: "snotes-item",
+            title: hover,
             onClick: () => {
               closePopover();
               openSession(row.id);
@@ -458,8 +477,9 @@ function NotesPopover(props) {
             children: [
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: `snotes-flag ${note.color}` }),
               /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { className: "snotes-item-text", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "snotes-item-title", children: row.title }),
-                note.text === "" ? t("edit.empty") : note.text
+                workspace !== void 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "snotes-item-workspace", children: workspace }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "snotes-item-title", children: title }),
+                note.text === "" ? t("edit.empty") : preview
               ] }),
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
                 CopyButton,
@@ -523,9 +543,9 @@ function NotesBar(props) {
   ] });
 }
 
-// plugin-src/dsh-session-notes/src/client/index.tsx
+// src/client/index.tsx
 var import_jsx_runtime2 = require("react/jsx-runtime");
-var inject = ["slots", "locale", "sessions"];
+var inject = ["slots", "locale", "sessions", "workspaces"];
 function apply(ctx) {
   ctx.effect(() => ctx.locale.register(NS, dictionaries), "session-notes: dictionaries");
   const store = new Store({
@@ -540,15 +560,32 @@ function apply(ctx) {
   }).catch(() => {
   });
   let sessionRows = [];
+  let workspaceBySession = {};
   const projectRows = () => {
     const snapshot = sessions.list.getSnapshot();
     sessionRows = Object.values(snapshot.byId).map((row) => ({
       id: row.id,
-      title: row.displayTitle ?? row.title ?? row.id.slice(0, 8)
+      title: row.displayTitle ?? row.title ?? row.id.slice(0, 8),
+      workspace: workspaceBySession[row.id]
     }));
   };
   projectRows();
   ctx.effect(() => sessions.list.subscribe(projectRows), "session-notes: session rows projection");
+  const workspaces = ctx.workspaces;
+  if (workspaces !== void 0) {
+    const projectWorkspaces = () => {
+      const map = {};
+      for (const ws of workspaces.list.getSnapshot().items) {
+        const name = ws.title ?? ws.workspaceId;
+        if (name === "") continue;
+        for (const id of ws.sessionIds) map[id] = name;
+      }
+      workspaceBySession = map;
+      projectRows();
+    };
+    projectWorkspaces();
+    ctx.effect(() => workspaces.list.subscribe(projectWorkspaces), "session-notes: workspace rows projection");
+  }
   const saveNote = async (id, payload) => {
     try {
       const result = await putNote(id, payload);
@@ -655,15 +692,21 @@ function HeaderButtonEntry(props) {
     )
   ] });
 }
+var BAR_WORKSPACE_CHARS = 5;
+var BAR_PREVIEW_CHARS = 20;
 function NotesBarEntry(props) {
-  const { sessionId, useNotes, openPopover, t } = props;
+  const { sessionId, useNotes, sessionRows, openPopover, t } = props;
   ensureStyles();
   const note = useNotes((s) => sessionId === void 0 ? void 0 : s.notes[sessionId]);
   const barEnabled = useNotes((s) => s.barEnabled);
   if (sessionId === void 0 || note === void 0 || note.text === "" || !barEnabled) return null;
+  const rawWorkspace = sessionRows.find((row) => row.id === sessionId)?.workspace;
+  const workspace = rawWorkspace === void 0 ? void 0 : rawWorkspace.length > BAR_WORKSPACE_CHARS ? `${rawWorkspace.slice(0, BAR_WORKSPACE_CHARS)}\u2026` : rawWorkspace;
+  const preview = note.text.length > BAR_PREVIEW_CHARS ? `${note.text.slice(0, BAR_PREVIEW_CHARS)}\u2026` : note.text;
   return /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "snotes-bar snotes-trigger", children: [
     /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("span", { className: `snotes-flag ${note.color}` }),
     /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("strong", { style: { flex: "none" }, children: t("bar.label") }),
+    workspace !== void 0 && /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("span", { className: "snotes-bar-workspace", title: rawWorkspace, children: workspace }),
     /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(
       "span",
       {
@@ -673,7 +716,7 @@ function NotesBarEntry(props) {
           const rect = e.currentTarget.getBoundingClientRect();
           openPopover({ left: rect.left, top: rect.top, height: rect.height });
         },
-        children: note.text
+        children: preview
       }
     ),
     /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(

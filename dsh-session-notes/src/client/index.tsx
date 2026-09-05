@@ -36,7 +36,7 @@ export interface NotesInjected {
 }
 
 /** Required services. */
-export const inject = ['slots', 'locale', 'sessions']
+export const inject = ['slots', 'locale', 'sessions', 'workspaces']
 
 interface SessionsService {
   list: {
@@ -44,6 +44,13 @@ interface SessionsService {
     subscribe(fn: () => void): () => void
   }
   open(id: string): void
+}
+
+interface WorkspacesService {
+  list: {
+    getSnapshot(): { items: Array<{ workspaceId: string; title?: string; sessionIds: string[] }> }
+    subscribe(fn: () => void): () => void
+  }
 }
 
 /** Client plugin body. */
@@ -63,17 +70,37 @@ export function apply(ctx: Context): void {
     store.set((s) => ({ ...s, notes: result.section.notes, barEnabled: result.section.barEnabled }))
   }).catch(() => { /* the surfaces show stale-empty; retry happens on next save */ })
 
-  // Mirror the sessions list into plain rows for the overview.
+  // Mirror the sessions list into plain rows for the overview, annotated with
+  // the owning workspace name. Both projections are cheap in-memory reads.
   let sessionRows: SessionRow[] = []
+  let workspaceBySession: Record<string, string> = {}
   const projectRows = (): void => {
     const snapshot = sessions.list.getSnapshot()
     sessionRows = Object.values(snapshot.byId).map((row) => ({
       id: row.id,
       title: row.displayTitle ?? row.title ?? row.id.slice(0, 8),
+      workspace: workspaceBySession[row.id],
     }))
   }
   projectRows()
   ctx.effect(() => sessions.list.subscribe(projectRows), 'session-notes: session rows projection')
+
+  // Track which workspace owns each session; only recomputes on workspace changes.
+  const workspaces = (ctx as unknown as { workspaces?: WorkspacesService }).workspaces
+  if (workspaces !== undefined) {
+    const projectWorkspaces = (): void => {
+      const map: Record<string, string> = {}
+      for (const ws of workspaces.list.getSnapshot().items) {
+        const name = ws.title ?? ws.workspaceId
+        if (name === '') continue
+        for (const id of ws.sessionIds) map[id] = name
+      }
+      workspaceBySession = map
+      projectRows()
+    }
+    projectWorkspaces()
+    ctx.effect(() => workspaces.list.subscribe(projectWorkspaces), 'session-notes: workspace rows projection')
+  }
 
   const saveNote: NotesInjected['saveNote'] = async (id, payload) => {
     try {
@@ -184,17 +211,26 @@ function HeaderButtonEntry(props: NotesInjected & { sessionId?: string; t: (key:
   )
 }
 
+/** Characters shown for the workspace name in the bottom bar before an ellipsis. */
+const BAR_WORKSPACE_CHARS = 5
+/** Characters shown for the note preview in the bottom bar before an ellipsis. */
+const BAR_PREVIEW_CHARS = 20
+
 /** Bottom bar entry. */
 function NotesBarEntry(props: NotesInjected & { sessionId?: string; t: (key: string) => string }): JSX.Element | null {
-  const { sessionId, useNotes, openPopover, t } = props
+  const { sessionId, useNotes, sessionRows, openPopover, t } = props
   ensureStyles()
   const note = useNotes((s) => (sessionId === undefined ? undefined : s.notes[sessionId]))
   const barEnabled = useNotes((s) => s.barEnabled)
   if (sessionId === undefined || note === undefined || note.text === '' || !barEnabled) return null
+  const rawWorkspace = sessionRows.find((row) => row.id === sessionId)?.workspace
+  const workspace = rawWorkspace === undefined ? undefined : (rawWorkspace.length > BAR_WORKSPACE_CHARS ? `${rawWorkspace.slice(0, BAR_WORKSPACE_CHARS)}…` : rawWorkspace)
+  const preview = note.text.length > BAR_PREVIEW_CHARS ? `${note.text.slice(0, BAR_PREVIEW_CHARS)}…` : note.text
   return (
     <div className="snotes-bar snotes-trigger">
       <span className={`snotes-flag ${note.color}`} />
       <strong style={{ flex: 'none' }}>{t('bar.label')}</strong>
+      {workspace !== undefined && <span className="snotes-bar-workspace" title={rawWorkspace}>{workspace}</span>}
       <span
         className="snotes-bar-text"
         title={note.text}
@@ -203,7 +239,7 @@ function NotesBarEntry(props: NotesInjected & { sessionId?: string; t: (key: str
           openPopover({ left: rect.left, top: rect.top, height: rect.height })
         }}
       >
-        {note.text}
+        {preview}
       </span>
       <button
         type="button"

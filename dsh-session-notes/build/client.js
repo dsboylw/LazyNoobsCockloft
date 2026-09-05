@@ -20,7 +20,7 @@ var __copyProps = (to, from, except, desc) => {
 };
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 
-// src/client/index.tsx
+// lazyrookie/dsh-session-notes/src/client/index.tsx
 var index_exports = {};
 __export(index_exports, {
   NotesBar: () => NotesBar,
@@ -30,7 +30,7 @@ __export(index_exports, {
 });
 module.exports = __toCommonJS(index_exports);
 
-// src/client/store.ts
+// lazyrookie/dsh-session-notes/src/client/store.ts
 var import_react = require("react");
 var Store = class {
   /** @param {S} initial */
@@ -88,12 +88,12 @@ function bindSelector(store) {
   };
 }
 
-// src/client/contract.ts
+// lazyrookie/dsh-session-notes/src/client/contract.ts
 var API_BASE = "/plugins/dsh-session-notes/api";
 var NOTE_COLORS = ["default", "amber", "rose", "sky", "lime"];
 var SAVE_DEBOUNCE_MS = 400;
 
-// src/client/api.ts
+// lazyrookie/dsh-session-notes/src/client/api.ts
 async function request(path, init) {
   const response = await fetch(`${API_BASE}${path}`, init);
   if (!response.ok) throw new Error(`session-notes api ${String(response.status)}`);
@@ -120,7 +120,7 @@ function putBarEnabled(barEnabled) {
   });
 }
 
-// src/client/clipboard.ts
+// lazyrookie/dsh-session-notes/src/client/clipboard.ts
 async function copyText(text) {
   if (text === "") return false;
   try {
@@ -146,7 +146,7 @@ async function copyText(text) {
   }
 }
 
-// src/client/styles.ts
+// lazyrookie/dsh-session-notes/src/client/styles.ts
 var css = `
 .snotes-pop {
   position: fixed; z-index: 1000; min-width: 380px; max-width: 520px;
@@ -220,6 +220,9 @@ var css = `
   padding: 1px 6px; border-radius: 6px; font-size: 11px; opacity: 0.85;
   background: var(--dsw-specific-fill-tertiary, rgba(128,128,128,0.18));
 }
+.snotes-bar .snotes-bar-title {
+  flex: none; max-width: 11em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
 .snotes-bar .snotes-bar-text {
   flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   color: var(--dsw-alias-label-primary, #ddd); cursor: pointer;
@@ -242,7 +245,7 @@ function ensureStyles() {
   document.head.appendChild(tag);
 }
 
-// src/client/locales.ts
+// lazyrookie/dsh-session-notes/src/client/locales.ts
 var NS = "session-notes";
 var zh = {
   "header.open": "\u{1F4DD} \u5907\u6CE8",
@@ -284,7 +287,7 @@ var en = {
 };
 var dictionaries = { zh, en };
 
-// src/client/ui.tsx
+// lazyrookie/dsh-session-notes/src/client/ui.tsx
 var import_react2 = require("react");
 var import_jsx_runtime = require("react/jsx-runtime");
 var ROW_TITLE_CHARS = 8;
@@ -543,7 +546,7 @@ function NotesBar(props) {
   ] });
 }
 
-// src/client/index.tsx
+// lazyrookie/dsh-session-notes/src/client/index.tsx
 var import_jsx_runtime2 = require("react/jsx-runtime");
 var inject = ["slots", "locale", "sessions", "workspaces"];
 function apply(ctx) {
@@ -693,6 +696,7 @@ function HeaderButtonEntry(props) {
   ] });
 }
 var BAR_WORKSPACE_CHARS = 5;
+var BAR_TITLE_CHARS = 8;
 var BAR_PREVIEW_CHARS = 20;
 function NotesBarEntry(props) {
   const { sessionId, useNotes, sessionRows, openPopover, t } = props;
@@ -700,13 +704,17 @@ function NotesBarEntry(props) {
   const note = useNotes((s) => sessionId === void 0 ? void 0 : s.notes[sessionId]);
   const barEnabled = useNotes((s) => s.barEnabled);
   if (sessionId === void 0 || note === void 0 || note.text === "" || !barEnabled) return null;
-  const rawWorkspace = sessionRows.find((row) => row.id === sessionId)?.workspace;
+  const row = sessionRows.find((r) => r.id === sessionId);
+  const rawWorkspace = row?.workspace;
   const workspace = rawWorkspace === void 0 ? void 0 : rawWorkspace.length > BAR_WORKSPACE_CHARS ? `${rawWorkspace.slice(0, BAR_WORKSPACE_CHARS)}\u2026` : rawWorkspace;
+  const rawTitle = row?.title ?? sessionId;
+  const title = rawTitle.length > BAR_TITLE_CHARS ? `${rawTitle.slice(0, BAR_TITLE_CHARS)}\u2026` : rawTitle;
   const preview = note.text.length > BAR_PREVIEW_CHARS ? `${note.text.slice(0, BAR_PREVIEW_CHARS)}\u2026` : note.text;
   return /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "snotes-bar snotes-trigger", children: [
     /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("span", { className: `snotes-flag ${note.color}` }),
     /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("strong", { style: { flex: "none" }, children: t("bar.label") }),
     workspace !== void 0 && /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("span", { className: "snotes-bar-workspace", title: rawWorkspace, children: workspace }),
+    /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("span", { className: "snotes-bar-title", title: rawTitle, children: title }),
     /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(
       "span",
       {

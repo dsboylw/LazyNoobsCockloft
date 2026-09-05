@@ -73,6 +73,9 @@ const css = `
   padding: 1px 6px; border-radius: 6px; font-size: 11px; opacity: 0.85;
   background: var(--dsw-specific-fill-tertiary, rgba(128,128,128,0.18));
 }
+.snotes-bar .snotes-bar-title {
+  flex: none; max-width: 11em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
 .snotes-bar .snotes-bar-text {
   flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   color: var(--dsw-alias-label-primary, #ddd); cursor: pointer;

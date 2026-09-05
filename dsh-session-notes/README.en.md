@@ -23,8 +23,8 @@ Lazy~~~~ that's just who I am ~ Noob and lazy, what can I do…
   - 5 color markers (default / amber / rose / sky / lime)
   - **All-notes overview**: every session that has a note (workspace badge + title + note preview + per-row copy button); click a row to jump straight to that session
   - Bottom-bar toggle (persisted)
-- **Persistent bottom bar**: when the current session has a note, a strip shows above the composer (color dot + workspace badge + note preview + copy button); clicking the preview opens the popover
-- **Long-text truncation**: overview rows show workspace 5 chars / title 8 chars / note 15 chars, the bottom bar shows 20 chars of the note; longer text ends with … — hover for the full text, while **copy buttons always copy the full content**
+- **Persistent bottom bar**: when the current session has a note, a strip shows above the composer (color dot + workspace badge + session title + note preview + copy button); clicking the preview opens the popover
+- **Long-text truncation**: overview rows show workspace 5 chars / title 8 chars / note 15 chars, the bottom bar shows workspace 5 chars / title 8 chars / note 20 chars; longer text ends with … — hover for the full text, while **copy buttons always copy the full content**
 - Data is stored in the host settings document (namespace `dsh-session-notes`), persisted per session id, survives restarts
 - Clearing the note text deletes the note; limits: 2000 notes / 20000 chars per note
 

@@ -213,6 +213,8 @@ function HeaderButtonEntry(props: NotesInjected & { sessionId?: string; t: (key:
 
 /** Characters shown for the workspace name in the bottom bar before an ellipsis. */
 const BAR_WORKSPACE_CHARS = 5
+/** Characters shown for the session title in the bottom bar before an ellipsis. */
+const BAR_TITLE_CHARS = 8
 /** Characters shown for the note preview in the bottom bar before an ellipsis. */
 const BAR_PREVIEW_CHARS = 20
 
@@ -223,14 +225,18 @@ function NotesBarEntry(props: NotesInjected & { sessionId?: string; t: (key: str
   const note = useNotes((s) => (sessionId === undefined ? undefined : s.notes[sessionId]))
   const barEnabled = useNotes((s) => s.barEnabled)
   if (sessionId === undefined || note === undefined || note.text === '' || !barEnabled) return null
-  const rawWorkspace = sessionRows.find((row) => row.id === sessionId)?.workspace
+  const row = sessionRows.find((r) => r.id === sessionId)
+  const rawWorkspace = row?.workspace
   const workspace = rawWorkspace === undefined ? undefined : (rawWorkspace.length > BAR_WORKSPACE_CHARS ? `${rawWorkspace.slice(0, BAR_WORKSPACE_CHARS)}…` : rawWorkspace)
+  const rawTitle = row?.title ?? sessionId
+  const title = rawTitle.length > BAR_TITLE_CHARS ? `${rawTitle.slice(0, BAR_TITLE_CHARS)}…` : rawTitle
   const preview = note.text.length > BAR_PREVIEW_CHARS ? `${note.text.slice(0, BAR_PREVIEW_CHARS)}…` : note.text
   return (
     <div className="snotes-bar snotes-trigger">
       <span className={`snotes-flag ${note.color}`} />
       <strong style={{ flex: 'none' }}>{t('bar.label')}</strong>
       {workspace !== undefined && <span className="snotes-bar-workspace" title={rawWorkspace}>{workspace}</span>}
+      <span className="snotes-bar-title" title={rawTitle}>{title}</span>
       <span
         className="snotes-bar-text"
         title={note.text}

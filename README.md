@@ -16,6 +16,12 @@
 
 以后有新的（菜）作品会继续加进来。
 
+## 闲聊两句
+
+AI 解放了生产力，让我这样的菜狗都可以懒到家，甚至这段 readme 的编辑都是让 AI 改的。。。。
+
+人，为什么不解放想象力，让自己变得更懒呢。。。。 欧耶~~
+
 ---
 
 *A small collection of DSH Desktop plugins, written by a noob-and-lazy developer. Start with [dsh-session-notes](dsh-session-notes/) — session notes with overview jump and one-click prompt copy.*

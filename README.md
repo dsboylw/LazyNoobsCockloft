@@ -1,4 +1,4 @@
-# LazyNoobsRepository
+# LazyNoobsCockloft
 
 一个又菜又懒的家伙的 DSH 插件集（DSH Desktop 插件合集）。
 

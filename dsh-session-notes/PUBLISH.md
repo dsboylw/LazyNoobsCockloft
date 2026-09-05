@@ -19,7 +19,7 @@
 ## 发布（或更新）
 
 ```powershell
-cd E:\DSH\plugin-src\dsh-session-notes
+cd E:\DSH\lazyrookie
 
 git init
 git add .

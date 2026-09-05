@@ -25,7 +25,7 @@ git init
 git add .
 git commit -m "dsh-session-notes 0.1.0: per-session notes plugin for DSH Desktop"
 git branch -M main
-git remote add origin https://github.com/<你的用户名>/dsh-session-notes.git
+git remote add origin https://github.com/<你的用户名>/LazyNoobsRepository.git
 git push -u origin main
 ```
 

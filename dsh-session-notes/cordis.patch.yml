@@ -1,0 +1,3 @@
+- insert:
+    - id: session-notes
+      name: '@deepseek-ai/dsh-session-notes'

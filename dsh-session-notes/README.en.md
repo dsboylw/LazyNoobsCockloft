@@ -41,7 +41,10 @@ Lazy~~~~ that's just who I am ~ Noob and lazy, what can I do…
 
 ## Changelog
 
-- **0.2.0** — 10-color labels; 📌 pinning everywhere (list/menu/editor); 🔍 filter box; ☰ session-switch menu; always-on bottom bar (writable when note-less); colored workspace badge & header dot; wider fields (title 20 / workspace 10 chars); capped popover scrolling + horizontal overflow fix; popover ownership split + error boundary; host API full PATCH semantics
+- **0.2.0**
+  - Added: 📌 pinning everywhere (overview list / session menu / editor); 🔍 filter box; ☰ session-switch menu; always-on bottom bar (writable when note-less); current-session row in both lists
+  - Changed: palette 5 → 10 colors; header dot and workspace badge follow the label color; title 8 → 20 chars, workspace 5 → 10 chars; list rows show title only (hover for full text); popover widened to 480~640px with capped scrolling
+  - Fixed: pin wiped notes (host API now full PATCH semantics); wrong popover on new sessions (popover ownership split); popover crash took down the UI (PopoverGuard error boundary); horizontal scrollbar (box-model fix)
 - **0.1.0** — first release: session notes, edit popover, all-notes overview, bottom bar
 
 ## Install (DSH Desktop)

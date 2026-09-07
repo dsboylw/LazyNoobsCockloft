@@ -10,7 +10,7 @@ AI <span style="color:red"><strong><em><u>解放了生产力</u></em></strong></
 
 | 插件 | 说明 | 状态 |
 |---|---|---|
-| [dsh-session-notes](dsh-session-notes/) | 会话备注：总览跳转、一键复制提示词、长文本截断、工作区徽标 | ✅ v0.1.1（DSH 0.7.1 / 0.7.2） |
+| [dsh-session-notes](dsh-session-notes/) | 会话备注：10 色标签、📌 置顶全链路、🔍 全部备注筛选、☰ 会话切换菜单、常驻底栏（无备注可直写）、彩色工作区徽章 | ✅ v0.2.0（DSH 0.7.1 / 0.7.2） |
 
 ## dsh-session-notes
 
@@ -24,4 +24,4 @@ AI <span style="color:red"><strong><em><u>解放了生产力</u></em></strong></
 
 ---
 
-*A small collection of DSH Desktop plugins, written by a noob-and-lazy developer. Start with [dsh-session-notes](dsh-session-notes/) — session notes with overview jump and one-click prompt copy.*
+*A small collection of DSH Desktop plugins, written by a noob-and-lazy developer. Start with [dsh-session-notes](dsh-session-notes/) — session notes with pinning, filtering, a session-switch menu, and copy buttons everywhere (v0.2.0).*

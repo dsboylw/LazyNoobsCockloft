@@ -13,11 +13,9 @@ import { copyText } from './clipboard.ts'
 import { ensureStyles } from './styles.ts'
 
 /** Overview row: characters shown for the session title before an ellipsis. */
-const ROW_TITLE_CHARS = 8
-/** Overview row: characters shown for the note preview before an ellipsis. */
-const ROW_PREVIEW_CHARS = 15
+const ROW_TITLE_CHARS = 20
 /** Overview row: characters shown for the workspace name before an ellipsis. */
-const ROW_WORKSPACE_CHARS = 5
+const ROW_WORKSPACE_CHARS = 10
 
 /** Popover anchor (viewport coords of the trigger button). */
 export interface PopoverAnchor {
@@ -46,8 +44,8 @@ export interface NotesUiProps {
   removeNote: (id: string) => Promise<boolean>
   /** Toggle the bottom bar; resolves to false on failure. */
   saveBarEnabled: (barEnabled: boolean) => Promise<boolean>
-  /** Open the popover anchored at a trigger rect. */
-  openPopover: (anchor: PopoverAnchor) => void
+  /** Open the popover anchored at a trigger rect; source says which surface owns it. */
+  openPopover: (anchor: PopoverAnchor, source?: 'header' | 'bar') => void
   /** Close the popover. */
   closePopover: () => void
   /** Open a session by id (overview jump). */
@@ -60,7 +58,8 @@ export interface NotesUiProps {
 
 /** Full client store state. */
 export interface NotesState extends NotesSection {
-  popover: { open: boolean; anchor: PopoverAnchor | null }
+  /** Whichever surface opened the popover renders it — one popover at a time. */
+  popover: { open: boolean; anchor: PopoverAnchor | null; source?: 'header' | 'bar' }
 }
 
 /** Tiny flash-state helper for transient feedback. */
@@ -104,7 +103,7 @@ function sortEntries(notes: Record<string, NoteRecord>): Array<[string, NoteReco
 
 /** Compute popover placement (opens below the anchor, flips above near the bottom edge). */
 function popoverStyle(anchor: PopoverAnchor): React.CSSProperties {
-  const left = Math.max(12, Math.min(anchor.left - 40, window.innerWidth - 540))
+  const left = Math.max(12, Math.min(anchor.left - 40, window.innerWidth - 660))
   const below = window.innerHeight - (anchor.top + anchor.height)
   if (below < 360) {
     return { left, bottom: Math.max(12, window.innerHeight - anchor.top + 8) }
@@ -121,6 +120,7 @@ export function NotesPopover(props: NotesUiProps): JSX.Element | null {
   const [draft, setDraft] = useState('')
   const [color, setColor] = useState('default')
   const [status, setStatus] = useState('')
+  const [query, setQuery] = useState('')
   const debounce = useRef<number | undefined>(undefined)
   const latest = useRef<{ id: string | undefined; text: string; color: string }>({ id: undefined, text: '', color: 'default' })
 
@@ -177,7 +177,22 @@ export function NotesPopover(props: NotesUiProps): JSX.Element | null {
   }
 
   const currentNote: NoteRecord | undefined = sessionId === undefined ? undefined : state.notes[sessionId]
-  const rowsWithNotes = rows.filter((row) => row.id !== sessionId && state.notes[row.id] !== undefined)
+  // Include the current session (when it has a note) so it can be pinned from
+  // the list too; clicking it just closes the popover — nowhere to jump.
+  const rowsWithNotes = rows.filter((row) => (row.id !== sessionId || currentNote !== undefined) && state.notes[row.id] !== undefined)
+  const q = query.trim().toLowerCase()
+  const visibleRows = rowsWithNotes
+    .filter((row) => {
+      if (q === '') return true
+      const n = state.notes[row.id]
+      return row.title.toLowerCase().includes(q) || (row.workspace ?? '').toLowerCase().includes(q) || (n?.text ?? '').toLowerCase().includes(q)
+    })
+    .sort((a, b) => {
+      const pa = state.notes[a.id]?.pinned === true
+      const pb = state.notes[b.id]?.pinned === true
+      if (pa !== pb) return pa ? -1 : 1
+      return (state.notes[b.id]?.updated ?? 0) - (state.notes[a.id]?.updated ?? 0)
+    })
 
   return (
     <div className="snotes-pop" style={popoverStyle(anchor)} onClick={(e) => e.stopPropagation()}>
@@ -198,6 +213,17 @@ export function NotesPopover(props: NotesUiProps): JSX.Element | null {
             label={t('edit.copy')}
             copiedLabel={t('edit.copied')}
           />
+          {currentNote !== undefined && (
+            <button
+              type="button"
+              className="snotes-btn"
+              style={currentNote.pinned === true ? { background: '#d29922', borderColor: '#d29922', color: '#1f2328', fontWeight: 600 } : undefined}
+              title={currentNote.pinned === true ? t('edit.unpin') : t('edit.pin')}
+              onClick={() => { if (sessionId !== undefined) void saveNote(sessionId, { pinned: currentNote.pinned !== true }) }}
+            >
+              {currentNote.pinned === true ? `📌 ${t('edit.unpin')}` : `📌 ${t('edit.pin')}`}
+            </button>
+          )}
           <button
             type="button"
             className="snotes-btn danger"
@@ -234,14 +260,25 @@ export function NotesPopover(props: NotesUiProps): JSX.Element | null {
       </div>
       <hr className="snotes-divider" />
       <h3>{t('all.title')}</h3>
+      {rowsWithNotes.length > 0 && (
+        <input
+          className="snotes-filter"
+          type="text"
+          value={query}
+          placeholder={t('all.filter')}
+          onChange={(e) => setQuery(e.target.value)}
+        />
+      )}
       <div className="snotes-list">
         {rowsWithNotes.length === 0 && <div style={{ opacity: 0.6, fontSize: 13 }}>{t('all.empty')}</div>}
-        {rowsWithNotes.map((row) => {
+        {rowsWithNotes.length > 0 && visibleRows.length === 0 && <div style={{ opacity: 0.6, fontSize: 13 }}>{t('all.noMatch')}</div>}
+        {visibleRows.map((row) => {
           const note = state.notes[row.id]
+          const isCurrent = row.id === sessionId
           const title = row.title.length > ROW_TITLE_CHARS ? `${row.title.slice(0, ROW_TITLE_CHARS)}…` : row.title
-          const preview = note.text.length > ROW_PREVIEW_CHARS ? `${note.text.slice(0, ROW_PREVIEW_CHARS)}…` : note.text
           const workspace = row.workspace === undefined ? undefined : (row.workspace.length > ROW_WORKSPACE_CHARS ? `${row.workspace.slice(0, ROW_WORKSPACE_CHARS)}…` : row.workspace)
           const hover = row.workspace === undefined ? `${row.title} — ${note.text}` : `${row.workspace} / ${row.title} — ${note.text}`
+          const pinned = note.pinned === true
           return (
             <div
               key={row.id}
@@ -249,15 +286,22 @@ export function NotesPopover(props: NotesUiProps): JSX.Element | null {
               tabIndex={0}
               className="snotes-item"
               title={hover}
-              onClick={() => { closePopover(); openSession(row.id) }}
-              onKeyDown={(e) => { if (e.key === 'Enter') { closePopover(); openSession(row.id) } }}
+              onClick={() => { closePopover(); if (!isCurrent) openSession(row.id) }}
+              onKeyDown={(e) => { if (e.key === 'Enter') { closePopover(); if (!isCurrent) openSession(row.id) } }}
             >
               <span className={`snotes-flag ${note.color}`} />
               <span className="snotes-item-text">
                 {workspace !== undefined && <span className="snotes-item-workspace">{workspace}</span>}
-                <span className="snotes-item-title">{title}</span>
-                {note.text === '' ? t('edit.empty') : preview}
+                <span className="snotes-item-title">{pinned ? '📌 ' : ''}{title}{isCurrent ? ` · ${t('all.current')}` : ''}</span>
               </span>
+              <button
+                type="button"
+                className={`snotes-pin${pinned ? ' on' : ''}`}
+                title={pinned ? t('edit.unpin') : t('edit.pin')}
+                onClick={(e) => { e.stopPropagation(); void saveNote(row.id, { pinned: !pinned }) }}
+              >
+                📌
+              </button>
               <CopyButton
                 text={note.text}
                 label={t('edit.copy')}

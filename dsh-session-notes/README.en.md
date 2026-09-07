@@ -18,17 +18,31 @@ Lazy~~~~ that's just who I am ~ Noob and lazy, what can I do…
 
 ## Features
 
-- **📝 Header button** (next to the conversation title): opens the edit popover; shows a green dot when the current session has a note
+- **📝 Header button** (next to the conversation title): opens the edit popover; shows a **label-colored dot** when the current session has a note
 - **Edit popover**
   - Edit the current session's note, debounced autosave (400 ms), shows "Saved ✓"
   - **Copy button**: one-click copy of the full note
-  - 5 color markers (default / amber / rose / sky / lime)
-  - **All-notes overview**: every session that has a note (workspace badge + title + note preview + per-row copy button); click a row to jump straight to that session
+  - **📌 Pin toggle**: pin right after writing; pinned state shows as a solid amber block
+  - **10 color markers** (default / amber / rose / sky / lime / purple / pink / orange / teal / blue)
+  - **All-notes overview**: workspace badge + title + per-row copy button; the current session is included too (tagged "this session", pinnable right there, clicking just closes)
+  - **🔍 Filter box**: live-filter by title / workspace / note text — scales when notes pile up
+  - Pinned-first sorting; capped list height with scrolling
   - Bottom-bar toggle (persisted)
-- **Persistent bottom bar**: when the current session has a note, a strip shows above the composer (color dot + workspace badge + session title + note preview + copy button); clicking the preview opens the popover
-- **Long-text truncation**: overview rows show workspace 5 chars / title 8 chars / note 15 chars, the bottom bar shows workspace 5 chars / title 8 chars / note 20 chars; longer text ends with … — hover for the full text, while **copy buttons always copy the full content**
+- **Always-on bottom bar** (always shown above the composer, note or not)
+  - Colored workspace badge (tinted by the note's label, text auto black/white for readability) + session title (20 chars)
+  - With a note: preview + copy button; clicking the preview opens the popover
+  - Without a note: a gray hint "no note for this session — click to write one" that opens the editor
+  - **☰ Session list**: quick-switch menu of every session with a note — always reachable; pinned-first, includes the current session, mutually exclusive with the popover (only one overlay at a time)
+- **📌 Pinning everywhere**: pin from the list, the menu, or the editor; pinned rows sort first with a 📌 prefix; hover tooltips still show the full "workspace / title — note"
+- **Long-text truncation**: titles 20 chars / workspace 10 chars, longer text ends with … — **copy buttons always copy the full content**
+- **Stability**: the popover is wrapped in an error boundary (PopoverGuard) — a popover crash can never take down the bottom bar or the header button; the host API follows full PATCH semantics (omitted fields keep their old value, explicit empty text = delete)
 - Data is stored in the host settings document (namespace `dsh-session-notes`), persisted per session id, survives restarts
 - Clearing the note text deletes the note; limits: 2000 notes / 20000 chars per note
+
+## Changelog
+
+- **0.2.0** — 10-color labels; 📌 pinning everywhere (list/menu/editor); 🔍 filter box; ☰ session-switch menu; always-on bottom bar (writable when note-less); colored workspace badge & header dot; wider fields (title 20 / workspace 10 chars); capped popover scrolling + horizontal overflow fix; popover ownership split + error boundary; host API full PATCH semantics
+- **0.1.0** — first release: session notes, edit popover, all-notes overview, bottom bar
 
 ## Install (DSH Desktop)
 
@@ -96,7 +110,7 @@ Requirements: Windows PowerShell, node ≥ 20, an [esbuild](https://esbuild.gith
 | GET | `/settings` | Read everything (notes + barEnabled) |
 | POST | `/settings` | Replace wholesale (server-side validation/sanitizing) |
 | GET | `/notes` | Read the notes table |
-| PUT | `/notes/:id` | Upsert (text/color/pinned; missing color keeps the previous value) |
+| PUT | `/notes/:id` | Upsert (PATCH semantics: omitted text/color/pinned keep the previous value; explicit empty text = delete) |
 | DELETE | `/notes/:id` | Delete one note |
 
 **Gotchas** (for future DSH plugin authors):

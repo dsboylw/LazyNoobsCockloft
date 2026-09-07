@@ -1,7 +1,7 @@
 {
   "name": "@deepseek-ai/dsh-session-notes",
-  "description": "Session notes: per-session remarks with a header editor popover, an all-notes overview with jump links, and a persistent bottom bar (with toggle) — copy buttons everywhere",
-  "version": "0.1.1",
+  "description": "Session notes: per-session remarks with 10-color labels, pinning, a filterable all-notes overview, and an always-on bottom bar with a session-switch menu — copy buttons everywhere",
+  "version": "0.2.0",
   "type": "module",
   "main": "lib/index.js",
   "exports": {

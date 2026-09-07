@@ -130,9 +130,11 @@ function createNotesRoute(replaceSection, readSection) {
               const prev = notes[id];
               const note = sanitizeNote({
                 id,
-                text: parsed.text,
+                // PATCH semantics: an omitted field keeps the previous value;
+                // an explicitly sent empty text still deletes the note.
+                text: typeof parsed.text === 'string' ? parsed.text : prev?.text,
                 color: parsed.color,
-                pinned: parsed.pinned,
+                pinned: typeof parsed.pinned === 'boolean' ? parsed.pinned : prev?.pinned,
                 updated: Date.now(),
               });
               if (note === undefined) { sendJson(res, 400, { ok: false, error: 'invalid note id' }); return; }

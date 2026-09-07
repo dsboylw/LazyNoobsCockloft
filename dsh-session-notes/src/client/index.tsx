@@ -8,7 +8,9 @@
 import type { Context } from '@deepseek-ai/cordis'
 import type { SnapshotSelectorHook } from './store.ts'
 import { Store, bindSelector } from './store.ts'
+import { Component, useEffect, useState, type CSSProperties, type ReactNode } from 'react'
 import type { NotesSection } from './contract.ts'
+import { noteColorHex, textColorOn } from './contract.ts'
 import { deleteNote as apiDeleteNote, fetchSection, putBarEnabled as apiPutBarEnabled, putNote as apiPutNote } from './api.ts'
 import { copyText } from './clipboard.ts'
 import { ensureStyles } from './styles.ts'
@@ -57,7 +59,7 @@ interface WorkspacesService {
 export function apply(ctx: Context): void {
   ctx.effect(() => ctx.locale.register(NS, dictionaries), 'session-notes: dictionaries')
 
-  const store = new Store<NotesState>({
+    const store = new Store<NotesState>({
     notes: {},
     barEnabled: true,
     popover: { open: false, anchor: null },
@@ -132,8 +134,8 @@ export function apply(ctx: Context): void {
     }
   }
 
-  const openPopover = (anchor: PopoverAnchor): void => {
-    store.set((s) => ({ ...s, popover: { open: true, anchor } }))
+  const openPopover = (anchor: PopoverAnchor, source?: 'header' | 'bar'): void => {
+    store.set((s) => ({ ...s, popover: { open: true, anchor, source } }))
   }
   const closePopover = (): void => {
     store.set((s) => (s.popover.open ? { ...s, popover: { open: false, anchor: null } } : s))
@@ -171,12 +173,27 @@ export function apply(ctx: Context): void {
   }, NotesBarEntry))
 }
 
+/** Error boundary: a crashed popover must never unmount the whole slot tree. */
+class PopoverGuard extends Component<{ children: ReactNode }, { failed: boolean }> {
+  override state = { failed: false }
+  static getDerivedStateFromError(): { failed: boolean } {
+    return { failed: true }
+  }
+  override componentDidCatch(error: unknown): void {
+    console.error('[session-notes] popover crashed (contained):', error)
+  }
+  override render(): ReactNode {
+    return this.state.failed ? null : this.props.children
+  }
+}
+
 /** Header button + popover host. */
 function HeaderButtonEntry(props: NotesInjected & { sessionId?: string; t: (key: string) => string }): JSX.Element {
   const { sessionId, useNotes, openPopover, closePopover, openSession, sessionRows, t, saveNote, removeNote, saveBarEnabled } = props
   ensureStyles()
   const state = useNotes((s) => s)
-  const hasNote = sessionId !== undefined && state.notes[sessionId] !== undefined
+  const note = sessionId !== undefined ? state.notes[sessionId] : undefined
+  const hasNote = note !== undefined
   return (
     <>
       <button
@@ -191,72 +208,183 @@ function HeaderButtonEntry(props: NotesInjected & { sessionId?: string; t: (key:
         }}
       >
         {t('header.open')}
-        {hasNote && <span style={{ position: 'absolute', top: 0, right: 0, width: 6, height: 6, borderRadius: '50%', background: '#57ab5a' }} />}
+        {hasNote && <span style={{ position: 'absolute', top: 0, right: 0, width: 6, height: 6, borderRadius: '50%', background: noteColorHex(note.color) }} />}
       </button>
-      {state.popover.open && (
-        <NotesPopover
-          sessionId={sessionId}
-          useNotes={useNotes}
-          saveNote={saveNote}
-          removeNote={removeNote}
-          saveBarEnabled={saveBarEnabled}
-          openPopover={openPopover}
-          closePopover={closePopover}
-          openSession={openSession}
-          rows={sessionRows}
-          t={t}
-        />
+      {state.popover.open && state.popover.source !== 'bar' && (
+        <PopoverGuard>
+          <NotesPopover
+            sessionId={sessionId}
+            useNotes={useNotes}
+            saveNote={saveNote}
+            removeNote={removeNote}
+            saveBarEnabled={saveBarEnabled}
+            openPopover={openPopover}
+            closePopover={closePopover}
+            openSession={openSession}
+            rows={sessionRows}
+            t={t}
+          />
+        </PopoverGuard>
       )}
     </>
   )
 }
 
 /** Characters shown for the workspace name in the bottom bar before an ellipsis. */
-const BAR_WORKSPACE_CHARS = 5
+const BAR_WORKSPACE_CHARS = 10
 /** Characters shown for the session title in the bottom bar before an ellipsis. */
-const BAR_TITLE_CHARS = 8
+const BAR_TITLE_CHARS = 20
 /** Characters shown for the note preview in the bottom bar before an ellipsis. */
 const BAR_PREVIEW_CHARS = 20
 
 /** Bottom bar entry. */
 function NotesBarEntry(props: NotesInjected & { sessionId?: string; t: (key: string) => string }): JSX.Element | null {
-  const { sessionId, useNotes, sessionRows, openPopover, t } = props
+  const { sessionId, useNotes, sessionRows, openPopover, closePopover, openSession, saveNote, removeNote, saveBarEnabled, t } = props
   ensureStyles()
   const note = useNotes((s) => (sessionId === undefined ? undefined : s.notes[sessionId]))
-  const barEnabled = useNotes((s) => s.barEnabled)
-  if (sessionId === undefined || note === undefined || note.text === '' || !barEnabled) return null
+  const state = useNotes((s) => s)
+  const barEnabled = state.barEnabled
+  const [listOpen, setListOpen] = useState(false)
+  const listRows = sessionRows
+    .filter((r) => state.notes[r.id] !== undefined || (r.id === sessionId && note !== undefined))
+    .sort((a, b) => {
+      const pa = state.notes[a.id]?.pinned === true
+      const pb = state.notes[b.id]?.pinned === true
+      if (pa !== pb) return pa ? -1 : 1
+      return (state.notes[b.id]?.updated ?? 0) - (state.notes[a.id]?.updated ?? 0)
+    })
+  useEffect(() => {
+    if (!listOpen) return
+    const onDown = (e: MouseEvent): void => {
+      const target = e.target as Element | null
+      if (target !== null && typeof target.closest === 'function' && target.closest('.snotes-bar-menu') !== null) return
+      setListOpen(false)
+    }
+    const onKey = (e: KeyboardEvent): void => { if (e.key === 'Escape') setListOpen(false) }
+    window.addEventListener('mousedown', onDown)
+    window.addEventListener('keydown', onKey)
+    return () => {
+      window.removeEventListener('mousedown', onDown)
+      window.removeEventListener('keydown', onKey)
+    }
+  }, [listOpen])
+  if (sessionId === undefined || !barEnabled) return null
+  const hasNote = note !== undefined && note.text !== ''
   const row = sessionRows.find((r) => r.id === sessionId)
   const rawWorkspace = row?.workspace
   const workspace = rawWorkspace === undefined ? undefined : (rawWorkspace.length > BAR_WORKSPACE_CHARS ? `${rawWorkspace.slice(0, BAR_WORKSPACE_CHARS)}…` : rawWorkspace)
   const rawTitle = row?.title ?? sessionId
   const title = rawTitle.length > BAR_TITLE_CHARS ? `${rawTitle.slice(0, BAR_TITLE_CHARS)}…` : rawTitle
-  const preview = note.text.length > BAR_PREVIEW_CHARS ? `${note.text.slice(0, BAR_PREVIEW_CHARS)}…` : note.text
+  const preview = hasNote && note !== undefined ? (note.text.length > BAR_PREVIEW_CHARS ? `${note.text.slice(0, BAR_PREVIEW_CHARS)}…` : note.text) : undefined
+  const hex = hasNote && note !== undefined ? noteColorHex(note.color) : undefined
+  const menuStyle: CSSProperties = { position: 'fixed', left: 12, bottom: 44, zIndex: 1000, maxHeight: '45vh', overflowY: 'auto' }
   return (
     <div className="snotes-bar snotes-trigger">
-      <span className={`snotes-flag ${note.color}`} />
       <strong style={{ flex: 'none' }}>{t('bar.label')}</strong>
-      {workspace !== undefined && <span className="snotes-bar-workspace" title={rawWorkspace}>{workspace}</span>}
-      <span className="snotes-bar-title" title={rawTitle}>{title}</span>
-      <span
-        className="snotes-bar-text"
-        title={note.text}
-        onClick={(e) => {
-          const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
-          openPopover({ left: rect.left, top: rect.top, height: rect.height })
-        }}
-      >
-        {preview}
-      </span>
       <button
         type="button"
         className="snotes-mini"
-        onClick={(e) => {
-          e.stopPropagation()
-          copyText(note.text)
-        }}
+        title={t('bar.list')}
+        onClick={(e) => { e.stopPropagation(); if (!listOpen) closePopover(); setListOpen(!listOpen) }}
       >
-        {t('edit.copy')}
+        ☰
       </button>
+      {listOpen && (
+        <div className="snotes-bar-menu snotes-pop" style={menuStyle} onClick={(e) => e.stopPropagation()}>
+          {listRows.length === 0 && <div style={{ opacity: 0.6, fontSize: 13 }}>{t('bar.list.empty')}</div>}
+          {listRows.map((r) => {
+            const n = state.notes[r.id]
+            const isCurrent = r.id === sessionId
+            const nColor = noteColorHex(n?.color)
+            const rWorkspace = r.workspace
+            const rWorkspaceShort = rWorkspace === undefined ? undefined : (rWorkspace.length > BAR_WORKSPACE_CHARS ? `${rWorkspace.slice(0, BAR_WORKSPACE_CHARS)}…` : rWorkspace)
+            const rTitle = r.title.length > BAR_TITLE_CHARS ? `${r.title.slice(0, BAR_TITLE_CHARS)}…` : r.title
+            const hover = rWorkspace === undefined ? `${r.title}${n === undefined ? '' : ` — ${n.text}`}` : `${rWorkspace} / ${r.title}${n === undefined ? '' : ` — ${n.text}`}`
+            return (
+              <div
+                key={r.id}
+                role="button"
+                tabIndex={0}
+                className="snotes-item"
+                title={hover}
+                onClick={() => { setListOpen(false); if (!isCurrent) openSession(r.id) }}
+                onKeyDown={(e) => { if (e.key === 'Enter') { setListOpen(false); if (!isCurrent) openSession(r.id) } }}
+              >
+                <span className="snotes-flag" style={{ background: nColor }} />
+                <span className="snotes-item-text">
+                  {rWorkspaceShort !== undefined && <span className="snotes-item-workspace">{rWorkspaceShort}</span>}
+                  <span className="snotes-item-title">{n?.pinned === true ? '📌 ' : ''}{rTitle}{isCurrent ? ` · ${t('all.current')}` : ''}</span>
+                </span>
+                {n !== undefined && (
+                  <button
+                    type="button"
+                    className={`snotes-pin${n.pinned === true ? ' on' : ''}`}
+                    title={n.pinned === true ? t('edit.unpin') : t('edit.pin')}
+                    onClick={(e) => { e.stopPropagation(); void saveNote(r.id, { pinned: !n.pinned }) }}
+                  >
+                    📌
+                  </button>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      )}
+      {workspace !== undefined && <span className="snotes-bar-workspace" title={rawWorkspace} style={{ background: hex, color: textColorOn(hex ?? '#8a8f98'), opacity: 1 }}>{workspace}</span>}
+      <span className="snotes-bar-title" title={rawTitle}>{title}</span>
+      {preview !== undefined && note !== undefined ? (
+        <>
+          <span
+            className="snotes-bar-text"
+            title={note.text}
+            onClick={(e) => {
+              const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
+              if (listOpen) setListOpen(false)
+              openPopover({ left: rect.left, top: rect.top, height: rect.height }, 'bar')
+            }}
+          >
+            {preview}
+          </span>
+          <button
+            type="button"
+            className="snotes-mini"
+            onClick={(e) => {
+              e.stopPropagation()
+              copyText(note.text)
+            }}
+          >
+            {t('edit.copy')}
+          </button>
+        </>
+      ) : (
+        <span
+          className="snotes-bar-text"
+          style={{ opacity: 0.55 }}
+          onClick={(e) => {
+            const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
+            if (listOpen) setListOpen(false)
+            openPopover({ left: rect.left, top: rect.top, height: rect.height }, 'bar')
+          }}
+        >
+          {t('bar.empty')}
+        </span>
+      )}
+      {state.popover.open && state.popover.source === 'bar' && (
+        <PopoverGuard>
+          <NotesPopover
+            sessionId={sessionId}
+            useNotes={useNotes}
+            saveNote={saveNote}
+            removeNote={removeNote}
+            saveBarEnabled={saveBarEnabled}
+            openPopover={openPopover}
+            closePopover={closePopover}
+            openSession={openSession}
+            rows={sessionRows}
+            t={t}
+          />
+        </PopoverGuard>
+      )}
     </div>
   )
 }

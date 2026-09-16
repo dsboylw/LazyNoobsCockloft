@@ -1,24 +1,24 @@
-{
-  "name": "@deepseek-ai/dsh-session-notes",
-  "description": "Session notes: per-session remarks with 10-color labels, pinning, a filterable all-notes overview, and an always-on bottom bar with a session-switch menu — copy buttons everywhere",
-  "version": "0.2.0",
-  "type": "module",
-  "main": "lib/index.js",
-  "exports": {
-    ".": "./lib/index.js",
-    "./client": "./lib/client.js",
-    "./package.json": "./package.json"
-  },
-  "dsh": {
-    "bundle": {
-      "patch": "./cordis.patch.yml"
-    },
-    "client": {
-      "platform": "web",
-      "inject": [
-        "@deepseek-ai/dsh-client-runtime"
-      ]
-    }
-  },
-  "license": "MIT"
+﻿{
+    "name":  "@deepseek-ai/dsh-session-notes",
+    "description":  "Session notes 0.3.1: bottom-bar preview follows the selected note (picker-driven), plus 0.3.0 features: multiple numbered notes per session, session-level color + pin on the title row, copy picker, cross-session filterable overview",
+    "version":  "0.3.1",
+    "type":  "module",
+    "main":  "lib/index.js",
+    "exports":  {
+                    ".":  "./lib/index.js",
+                    "./client":  "./lib/client.js",
+                    "./package.json":  "./package.json"
+                },
+    "dsh":  {
+                "bundle":  {
+                               "patch":  "./cordis.patch.yml"
+                           },
+                "client":  {
+                               "platform":  "web",
+                               "inject":  [
+                                              "@deepseek-ai/dsh-client-runtime"
+                                          ]
+                           }
+            },
+    "license":  "MIT"
 }

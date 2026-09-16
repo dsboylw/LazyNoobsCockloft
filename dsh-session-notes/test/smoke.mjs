@@ -82,14 +82,22 @@ function drive(method, subpath, body) {
   assert.deepStrictEqual(body.section, { notes: {}, barEnabled: true })
 }
 
-// PUT note
+// 0.3.0 legacy migration: a 0.2.x-shaped record (no sessionId) keeps working
 {
-  let captured = null
-  const res = await new Promise((resolve) => {
-    const chunks = [Buffer.from(JSON.stringify({ text: '提示语A：分析BTC结构', color: 'amber' }))]
+  stored = { notes: { 'sess-legacy': { text: '旧会话备注', color: 'sky', pinned: false, updated: 1 } }, barEnabled: true }
+  const res = await drive('GET', '/settings')
+  const body = JSON.parse(res.body)
+  assert.strictEqual(body.section.notes['sess-legacy'].sessionId, 'sess-legacy', 'legacy note migrates sessionId = key')
+  assert.strictEqual(body.section.notes['sess-legacy'].text, '旧会话备注')
+}
+
+// 0.3.0 multi-note: PUT with explicit sessionId creates a second note for the same session
+{
+  const put = (key, payload) => new Promise((resolve) => {
+    const chunks = [Buffer.from(JSON.stringify(payload))]
     const req = {
       method: 'PUT',
-      url: '/plugins/dsh-session-notes/api/notes/sess-1',
+      url: `/plugins/dsh-session-notes/api/notes/${encodeURIComponent(key)}`,
       on(event, fn) {
         if (event === 'data') { for (const c of chunks) fn(c) }
         if (event === 'end') fn()
@@ -97,23 +105,60 @@ function drive(method, subpath, body) {
       },
       destroy() {},
     }
-    const res2 = {
-      writeHead(status) { captured = { status } },
-      end(text) { resolve({ status: captured.status, body: text }) },
-    }
+    const res2 = { writeHead() {}, end(text) { resolve(JSON.parse(text)) } }
     route.handler(req, res2)
   })
-  assert.strictEqual(res.status, 200)
-  const body = JSON.parse(res.body)
-  assert.strictEqual(body.notes['sess-1'].text, '提示语A：分析BTC结构')
-  assert.strictEqual(body.notes['sess-1'].color, 'amber')
+  const r1 = await put('n-a1', { sessionId: 'sess-1', text: '提示语A：分析BTC结构', color: 'amber' })
+  assert.strictEqual(r1.notes['n-a1'].sessionId, 'sess-1', 'new note carries sessionId from payload')
+  const r2 = await put('n-a2', { sessionId: 'sess-1', text: '提示语B：输出JSON', color: 'lime' })
+  assert.strictEqual(r2.notes['n-a2'].sessionId, 'sess-1')
+  assert.strictEqual(Object.values(r2.notes).filter((n) => n.sessionId === 'sess-1').length, 2, 'two notes bound to sess-1')
+  // legacy PUT to a session key (no sessionId field) keeps 0.2.x semantics
+  const r3 = await put('sess-1', { text: '旧式单条备注' })
+  assert.strictEqual(r3.notes['sess-1'].sessionId, 'sess-1', 'legacy PUT binds sessionId = key')
+  // 0.3.0 empty draft: a new note persisted with empty text SURVIVES validation
+  // (user is mid-typing) — this is what makes the ＋ button work
+  const r4 = await put('n-a3', { sessionId: 'sess-1', text: '', color: 'default' })
+  assert.strictEqual(r4.notes['n-a3'].sessionId, 'sess-1', 'empty 0.3.0 draft survives')
+  assert.strictEqual(r4.notes['n-a3'].text, '')
+  // legacy empty PUT still deletes (0.2.x semantics intact)
+  const r5 = await put('sess-legacy-2', { text: 'temp' })
+  assert.ok(r5.notes['sess-legacy-2'] !== undefined)
+  const r6 = await put('sess-legacy-2', { text: '' })
+  assert.strictEqual(r6.notes['sess-legacy-2'], undefined, 'legacy empty PUT still deletes')
+  // 0.3.1 pin-only PUT must NOT bump `updated` (stable list order)
+  const before = r2.notes['n-a2']
+  const r7 = await put('n-a2', { pinned: !before.pinned })
+  assert.strictEqual(r7.notes['n-a2'].pinned, !before.pinned, 'pin toggled')
+  assert.strictEqual(r7.notes['n-a2'].updated, before.updated, 'pin-only keeps updated (order stable)')
+  const r8 = await put('n-a2', { pinned: before.pinned })
+  assert.strictEqual(r8.notes['n-a2'].updated, before.updated, 'unpin also keeps updated')
+  // 0.3.2 seq assignment: new notes take max(seq in session) + 1
+  const r9 = await put('n-a4', { sessionId: 'sess-1', text: '第四条', color: 'default' })
+  const prevSeqs = [r1.notes['n-a1'], r2.notes['n-a2'], r3.notes['sess-1'], r4.notes['n-a3']].map((n) => n.seq ?? 0)
+  assert.strictEqual(r9.notes['n-a4'].seq, Math.max(...prevSeqs) + 1, 'seq = session max + 1')
+  // 0.3.2 session recolor: PUT /notes/session:<sid> paints all session notes
+  const recolor = await new Promise((resolve) => {
+    const chunks = [Buffer.from(JSON.stringify({ color: 'rose' }))]
+    const req = {
+      method: 'PUT',
+      url: '/plugins/dsh-session-notes/api/notes/session%3Asess-1',
+      on(event, fn) { if (event === 'data') { for (const c of chunks) fn(c) } if (event === 'end') fn(); return req },
+      destroy() {},
+    }
+    const res2 = { writeHead() {}, end(text) { resolve(JSON.parse(text)) } }
+    route.handler(req, res2)
+  })
+  const sess1 = Object.values(recolor.notes).filter((n) => n.sessionId === 'sess-1')
+  assert.ok(sess1.length >= 2, 'session has notes to recolor')
+  assert.ok(sess1.every((n) => n.color === 'rose'), 'recolor paints every session note')
 }
 
-// GET settings reflects the note
+// GET settings reflects the notes
 {
   const res = await drive('GET', '/settings')
   const body = JSON.parse(res.body)
-  assert.strictEqual(body.section.notes['sess-1'].text, '提示语A：分析BTC结构')
+  assert.strictEqual(body.section.notes['n-a1'].text, '提示语A：分析BTC结构')
 }
 
 // DELETE note
@@ -121,7 +166,7 @@ function drive(method, subpath, body) {
   const res = await new Promise((resolve) => {
     const req = {
       method: 'DELETE',
-      url: '/plugins/dsh-session-notes/api/notes/sess-1',
+      url: '/plugins/dsh-session-notes/api/notes/n-a2',
       on() { return req },
       destroy() {},
     }
@@ -129,7 +174,7 @@ function drive(method, subpath, body) {
     route.handler(req, res2)
   })
   const body = JSON.parse(res.body)
-  assert.strictEqual(body.notes['sess-1'], undefined)
+  assert.strictEqual(body.notes['n-a2'], undefined)
 }
 
 // unknown route 404
@@ -147,7 +192,8 @@ globalThis.window = {
     load(def) { loaded = def },
   },
 }
-const reactStub = { useState: () => [undefined, () => {}], useEffect: () => {}, useRef: () => ({ current: undefined }), useCallback: (fn) => fn, useSyncExternalStore: () => undefined, createElement: () => null, Fragment: 'fragment', forwardRef: (fn) => fn }
+class StubComponent {}
+const reactStub = { useState: () => [undefined, () => {}], useEffect: () => {}, useRef: () => ({ current: undefined }), useCallback: (fn) => fn, useSyncExternalStore: () => undefined, createElement: () => null, Fragment: 'fragment', forwardRef: (fn) => fn, Component: StubComponent }
 const jsxStub = { jsx: () => null, jsxs: () => null, Fragment: 'fragment' }
 const req = (name) => {
   if (name === 'react') return reactStub
@@ -219,6 +265,9 @@ for (const r of registrations) {
   const face = r.def.inject('sess-live')
   assert.strictEqual(typeof face.useNotes, 'function')
   assert.strictEqual(typeof face.saveNote, 'function')
+  assert.strictEqual(typeof face.addNote, 'function', '0.3.0 addNote action')
+  assert.strictEqual(typeof face.selectNote, 'function', '0.3.0 selectNote action')
+  assert.strictEqual(typeof face.setPickerOpen, 'function', '0.3.0 setPickerOpen action')
   assert.strictEqual(typeof face.openSession, 'function')
   assert.strictEqual(face.sessionId, 'sess-live', 'inject face carries binding key')
   assert.ok(Array.isArray(face.sessionRows))

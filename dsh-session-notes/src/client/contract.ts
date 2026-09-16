@@ -3,10 +3,14 @@
 /** One note record (mirrors the host-side sanitize shape). */
 export interface NoteRecord {
   id: string
+  /** Owning session id. Legacy 0.2.x notes migrate with sessionId = legacy id. */
+  sessionId: string
   text: string
   color: string
   pinned: boolean
   updated: number
+  /** Stable per-session order number (assigned at creation, never renumbered). */
+  seq?: number
 }
 
 /** Durable section shape. */
@@ -53,3 +57,10 @@ export function textColorOn(hex: string): string {
 
 /** Debounce wait for text edits, ms. */
 export const SAVE_DEBOUNCE_MS = 400
+
+/** First-line preview of a note, truncated to max chars. */
+export function previewText(text: string, max: number): string {
+  const line = text.split('\n', 1)[0] ?? ''
+  if (line === '') return '（空）'
+  return line.length > max ? `${line.slice(0, max)}…` : line
+}

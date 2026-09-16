@@ -28,6 +28,13 @@ export const zh = {
   'all.current': '本会话',
   'error.load': '备注加载失败',
   'error.save': '保存失败',
+  'all.deleteAll': '删除该会话的全部备注',
+  'edit.new': '＋ 新增一条',
+  'edit.count': '（{n} 条）',
+  'edit.emptyDraft': '（先在下面写内容）',
+  'bar.picker': '挑选要复制的备注',
+  'bar.picker.empty': '本会话还没有备注 — 点 ＋ 写一条',
+  'bar.multi': '条',
 } as const
 
 export type NotesKey = keyof typeof zh
@@ -58,6 +65,13 @@ export const en: Record<NotesKey, string> = {
   'all.current': 'This one',
   'error.load': 'Failed to load notes',
   'error.save': 'Failed to save',
+  'all.deleteAll': 'Delete all notes of this session',
+  'edit.new': '＋ New note',
+  'edit.count': '({n})',
+  'edit.emptyDraft': '(write the content below first)',
+  'bar.picker': 'Pick a note to copy',
+  'bar.picker.empty': 'No note for this session — click ＋ to write one',
+  'bar.multi': '',
 }
 
 export const dictionaries = { zh, en }

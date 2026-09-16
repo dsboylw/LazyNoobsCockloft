@@ -1,6 +1,6 @@
 # dsh-session-notes
 
-**Session notes plugin for DSH** (works on both DSH Desktop and Web; `web` platform client plugin). Attach a note to every conversation so you never have to dig through chat history to find your prompts.
+**Session notes plugin for DSH** (works on both DSH Desktop and Web; `web` platform client plugin). Attach **multiple** numbered notes (1 2 3… in creation order) to every conversation so you never have to dig through chat history to find your prompts.
 
 [中文](README.md) | [English](README.en.md)
 
@@ -41,6 +41,13 @@ Lazy~~~~ that's just who I am ~ Noob and lazy, what can I do…
 
 ## Changelog
 
+- **0.3.1**
+  - Bottom-bar preview now follows the selected note: pick a note in the popover and the bar shows that one (falls back to the latest-edited note when nothing is selected)
+- **0.3.0**
+  - Added: **multiple notes per session** (N prompts on one session, no more cramming into one) + **sequence numbers** (1 2 3… in creation order, never renumbered)
+  - Added: **session-level color** (color dots in the popover title row — one click repaints the whole group) + **session-level pin** (📌 in the title row, pins the group in the ☰ list)
+  - Added: **copy picker** (1 note = one-click copy; several = ▾ picker menu, click to copy, pinned-first sorting)
+  - Changed: slimmer bottom bar (＋ removed; adding notes unified in the popover); stability fixes (locale-undefined defense, missing-rows defense, empty-draft survival, pin no longer shuffles order)
 - **0.2.0**
   - Added: 📌 pinning everywhere (overview list / session menu / editor); 🔍 filter box; ☰ session-switch menu; always-on bottom bar (writable when note-less); current-session row in both lists
   - Changed: palette 5 → 10 colors; header dot and workspace badge follow the label color; title 8 → 20 chars, workspace 5 → 10 chars; list rows show title only (hover for full text); popover widened to 480~640px with capped scrolling

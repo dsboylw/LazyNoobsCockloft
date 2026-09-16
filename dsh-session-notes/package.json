@@ -1,4 +1,4 @@
-﻿{
+{
     "name":  "@deepseek-ai/dsh-session-notes",
     "description":  "Session notes 0.3.1: bottom-bar preview follows the selected note (picker-driven), plus 0.3.0 features: multiple numbered notes per session, session-level color + pin on the title row, copy picker, cross-session filterable overview",
     "version":  "0.3.1",

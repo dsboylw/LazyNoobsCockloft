@@ -4,7 +4,7 @@
 
 [中文](README.md) | [English](README.en.md)
 
-> ⚠️ **Built and tested on DSH Desktop 0.7.1**; verified working on 0.7.2.
+> ✅ **Built and tested on DSH Desktop 0.8.2** (current version); compatible since 0.7.x.
 
 ## Why this plugin exists
 

@@ -10,18 +10,16 @@ AI <span style="color:red"><strong><em><u>解放了生产力</u></em></strong></
 
 | 插件 | 说明 | 状态 |
 |---|---|---|
-| [dsh-session-notes](dsh-session-notes/) | 会话备注：10 色标签、📌 置顶全链路、🔍 全部备注筛选、☰ 会话切换菜单、常驻底栏（无备注可直写）、彩色工作区徽章 | ✅ v0.2.0（DSH 0.7.1 / 0.7.2） |
+| [dsh-session-notes](dsh-session-notes/) | 会话备注 **0.3.1**：一个会话挂**多条**备注（1 2 3 序号），会话级颜色+置顶（弹窗标题行一键换），复制挑选器（多条备注点哪条复制哪条），🗑 会话备注批量清理，兼容 DSH Desktop **0.8.2** | ✅ v0.3.1（DSH 0.8.2 实测） |
 
 ## dsh-session-notes
 
 > 用 DSH 桌面版时发现一个问题：我经常在一个会话里反复用同一条提示语去要数据，每次都得往前翻聊天记录、拷贝、再粘回去，很麻烦；右键会话也没有备注栏，索性自己写了一个。
->
-> 之前装过 fun-ticker，觉得不好用就卸载了——那个插件本身也不是按桌面版适配的，卸载也没卸干净。索性借着他的一些结构，改出了这个备注插件。
->
-> 懒~~~~ 就是了~ 又菜又懒，咋办啊……
+
+**v0.3.1 亮点**：多条备注（1 2 3 序号）· 会话级颜色+置顶 · 复制挑选器 · 底栏跟随选中 · 🗑 会话备注批量清理 · 兼容 DSH Desktop 0.8.2
 
 以后有新的（菜）作品会继续加进来。
 
 ---
 
-*A small collection of DSH Desktop plugins, written by a noob-and-lazy developer. Start with [dsh-session-notes](dsh-session-notes/) — session notes with pinning, filtering, a session-switch menu, and copy buttons everywhere (v0.2.0).*
+*A small collection of DSH Desktop plugins by a noob-and-lazy developer. Start with [dsh-session-notes](dsh-session-notes/) — multiple numbered notes per session, session-level color and pin, a copy picker (v0.3.1, DSH Desktop 0.8.2).*

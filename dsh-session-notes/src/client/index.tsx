@@ -195,8 +195,16 @@ function NotesBarEntry(props: NotesInjected & { sessionId?: string; t: (key: str
   if (sessionId === undefined || !barEnabled) return null
   // 0.3.2: bar preview shows the SELECTED note (last picked in the popover) —
   // falls back to latest-updated only when nothing has been selected yet.
-  const selectedNote = state.selectedNoteId !== undefined ? state.notes[state.selectedNoteId] : undefined
-  const latestNote = selectedNote?.sessionId === sessionId ? selectedNote : latestOf(sessionId)
+  // The selection is persisted per-session in localStorage so a shell restart
+  // restores the same entry instead of jumping to the latest-edited note.
+  const lsKey = `snotes-selected-${sessionId}`
+  let persistedId: string | undefined
+  try { persistedId = window.localStorage.getItem(lsKey) ?? undefined } catch { /* storage unavailable */ }
+  const memSelected = state.selectedNoteId !== undefined ? state.notes[state.selectedNoteId] : undefined
+  const persistedSelected = persistedId !== undefined ? state.notes[persistedId] : undefined
+  const latestNote = (memSelected?.sessionId === sessionId ? memSelected : undefined)
+    ?? (persistedSelected?.sessionId === sessionId ? persistedSelected : undefined)
+    ?? latestOf(sessionId)
   const hasNote = latestNote !== undefined && latestNote.text !== ''
   const row = sessionRows.find((r) => r.id === sessionId)
   const rawWorkspace = row?.workspace
@@ -441,6 +449,11 @@ export function apply(ctx: Context): void {
 
   const selectNote: NotesInjected['selectNote'] = (id) => {
     store.set((s) => (s.selectedNoteId === id ? s : { ...s, selectedNoteId: id }))
+    // 0.3.2: persist the selection per session so a shell restart restores it
+    const note = store.getSnapshot().notes[id]
+    if (note !== undefined) {
+      try { window.localStorage.setItem(`snotes-selected-${note.sessionId}`, id) } catch { /* storage unavailable */ }
+    }
   }
 
   const setPickerOpen: NotesInjected['setPickerOpen'] = (open) => {

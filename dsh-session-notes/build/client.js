@@ -979,8 +979,15 @@ function NotesBarEntry(props) {
     };
   }, [state.pickerOpen]);
   if (sessionId === void 0 || !barEnabled) return null;
-  const selectedNote = state.selectedNoteId !== void 0 ? state.notes[state.selectedNoteId] : void 0;
-  const latestNote = selectedNote?.sessionId === sessionId ? selectedNote : latestOf(sessionId);
+  const lsKey = `snotes-selected-${sessionId}`;
+  let persistedId;
+  try {
+    persistedId = window.localStorage.getItem(lsKey) ?? void 0;
+  } catch {
+  }
+  const memSelected = state.selectedNoteId !== void 0 ? state.notes[state.selectedNoteId] : void 0;
+  const persistedSelected = persistedId !== void 0 ? state.notes[persistedId] : void 0;
+  const latestNote = (memSelected?.sessionId === sessionId ? memSelected : void 0) ?? (persistedSelected?.sessionId === sessionId ? persistedSelected : void 0) ?? latestOf(sessionId);
   const hasNote = latestNote !== void 0 && latestNote.text !== "";
   const row = sessionRows.find((r) => r.id === sessionId);
   const rawWorkspace = row?.workspace;
@@ -1235,6 +1242,13 @@ function apply(ctx) {
   };
   const selectNote = (id) => {
     store.set((s) => s.selectedNoteId === id ? s : { ...s, selectedNoteId: id });
+    const note = store.getSnapshot().notes[id];
+    if (note !== void 0) {
+      try {
+        window.localStorage.setItem(`snotes-selected-${note.sessionId}`, id);
+      } catch {
+      }
+    }
   };
   const setPickerOpen = (open) => {
     store.set((s) => s.pickerOpen === open ? s : { ...s, pickerOpen: open });
